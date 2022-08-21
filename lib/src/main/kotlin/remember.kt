@@ -1,8 +1,6 @@
 package net.lsafer.datastore
 
-import android.content.Context
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import kotlinx.coroutines.runBlocking
@@ -11,13 +9,10 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Composable
-fun <T> rememberPreference(
+fun <T> DataStore<Preferences>.observePreference(
     key: Preferences.Key<T>,
-    store: (Context) -> DataStore<Preferences>,
 ): MutableState<T?> {
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val dataStore = store(context)
+    val dataStore = this
     val preferences: Preferences? by dataStore.data.collectAsState(initial = null)
 
     return object : MutableState<T?> {
@@ -38,12 +33,11 @@ fun <T> rememberPreference(
 }
 
 @Composable
-fun <T> rememberPreference(
+fun <T> DataStore<Preferences>.observePreference(
     key: Preferences.Key<T>,
-    store: (Context) -> DataStore<Preferences>,
     default: () -> T
 ): MutableState<T> {
-    var preference by rememberPreference(key, store)
+    var preference by observePreference(key)
     val preferenceOrDefault = remember(preference) {
         preference ?: default()
     }
@@ -59,104 +53,89 @@ fun <T> rememberPreference(
 }
 
 @Composable
-fun rememberIntPreference(
-    name: String,
-    store: (Context) -> DataStore<Preferences>
-) = rememberPreference(intPreferencesKey(name), store)
+fun DataStore<Preferences>.observeIntPreference(
+    name: String
+) = observePreference(intPreferencesKey(name))
 
 @Composable
-fun rememberIntPreference(
+fun DataStore<Preferences>.observeIntPreference(
     name: String,
-    store: (Context) -> DataStore<Preferences>,
     default: Int
-) = rememberPreference(intPreferencesKey(name), store) { default }
+) = observePreference(intPreferencesKey(name)) { default }
 
 @Composable
-fun rememberDoublePreference(
-    name: String,
-    store: (Context) -> DataStore<Preferences>
-) = rememberPreference(doublePreferencesKey(name), store)
+fun DataStore<Preferences>.observeDoublePreference(
+    name: String
+) = observePreference(doublePreferencesKey(name))
 
 @Composable
-fun rememberDoublePreference(
+fun DataStore<Preferences>.observeDoublePreference(
     name: String,
-    store: (Context) -> DataStore<Preferences>,
     default: Double
-) = rememberPreference(doublePreferencesKey(name), store) { default }
+) = observePreference(doublePreferencesKey(name)) { default }
 
 @Composable
-fun rememberStringPreference(
-    name: String,
-    store: (Context) -> DataStore<Preferences>
-) = rememberPreference(stringPreferencesKey(name), store)
+fun DataStore<Preferences>.observeStringPreference(
+    name: String
+) = observePreference(stringPreferencesKey(name))
 
 @Composable
-fun rememberStringPreference(
+fun DataStore<Preferences>.observeStringPreference(
     name: String,
-    store: (Context) -> DataStore<Preferences>,
     default: String
-) = rememberPreference(stringPreferencesKey(name), store) { default }
+) = observePreference(stringPreferencesKey(name)) { default }
 
 @Composable
-fun rememberBooleanPreference(
-    name: String,
-    store: (Context) -> DataStore<Preferences>
-) = rememberPreference(booleanPreferencesKey(name), store)
+fun DataStore<Preferences>.observeBooleanPreference(
+    name: String
+) = observePreference(booleanPreferencesKey(name))
 
 @Composable
-fun rememberBooleanPreference(
+fun DataStore<Preferences>.observeBooleanPreference(
     name: String,
-    store: (Context) -> DataStore<Preferences>,
     default: Boolean
-) = rememberPreference(booleanPreferencesKey(name), store) { default }
+) = observePreference(booleanPreferencesKey(name)) { default }
 
 @Composable
-fun rememberFloatPreference(
-    name: String,
-    store: (Context) -> DataStore<Preferences>
-) = rememberPreference(floatPreferencesKey(name), store)
+fun DataStore<Preferences>.observeFloatPreference(
+    name: String
+) = observePreference(floatPreferencesKey(name))
 
 @Composable
-fun rememberFloatPreference(
+fun DataStore<Preferences>.observeFloatPreference(
     name: String,
-    store: (Context) -> DataStore<Preferences>,
     default: Float
-) = rememberPreference(floatPreferencesKey(name), store) { default }
+) = observePreference(floatPreferencesKey(name)) { default }
 
 @Composable
-fun rememberLongPreference(
-    name: String,
-    store: (Context) -> DataStore<Preferences>
-) = rememberPreference(longPreferencesKey(name), store)
+fun DataStore<Preferences>.observeLongPreference(
+    name: String
+) = observePreference(longPreferencesKey(name))
 
 @Composable
-fun rememberLongPreference(
+fun DataStore<Preferences>.observeLongPreference(
     name: String,
-    store: (Context) -> DataStore<Preferences>,
     default: Long
-) = rememberPreference(longPreferencesKey(name), store) { default }
+) = observePreference(longPreferencesKey(name)) { default }
 
 @Composable
-fun rememberStringSetPreference(
-    name: String,
-    store: (Context) -> DataStore<Preferences>
-) = rememberPreference(longPreferencesKey(name), store)
+fun DataStore<Preferences>.observeStringSetPreference(
+    name: String
+) = observePreference(stringSetPreferencesKey(name))
 
 @Composable
-fun rememberStringSetPreference(
+fun DataStore<Preferences>.observeStringSetPreference(
     name: String,
-    store: (Context) -> DataStore<Preferences>,
     default: Set<String>
-) = rememberPreference(stringSetPreferencesKey(name), store) { default }
+) = observePreference(stringSetPreferencesKey(name)) { default }
 
 @Composable
-inline fun <reified T> rememberJsonPreference(
+inline fun <reified T> DataStore<Preferences>.observeJsonPreference(
     name: String,
-    noinline store: (Context) -> DataStore<Preferences>,
     json: Json = Json
 ): MutableState<T?> {
     val key = stringPreferencesKey(name)
-    var preference by rememberPreference(key, store)
+    var preference by observePreference(key)
     val preferenceAsJson: T? = remember(preference) {
         preference?.let { json.decodeFromString<T>(it) }
     }
@@ -177,13 +156,12 @@ inline fun <reified T> rememberJsonPreference(
 }
 
 @Composable
-inline fun <reified T> rememberJsonPreference(
+inline fun <reified T> DataStore<Preferences>.observeJsonPreference(
     name: String,
-    noinline store: (Context) -> DataStore<Preferences>,
     json: Json = Json,
     crossinline default: @DisallowComposableCalls () -> T
 ): MutableState<T> {
-    var preference by rememberJsonPreference<T>(name, store, json)
+    var preference by observeJsonPreference<T>(name, json)
     val preferenceOrDefault = remember(preference) {
         preference ?: default()
     }
