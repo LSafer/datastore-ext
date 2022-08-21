@@ -64,3 +64,14 @@ dependencies {
 
     testImplementation(kotlin("test"))
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
+                from(components["release"])
+                artifactId = "datastore-ext"
+            }
+        }
+    }
+}
